@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Loader } from "lucide-react";
 
-export default function blogsPage() {
+export default function BlogsPage() {
   const [loading, setLoading] = useState(false);
   const [cards, setCard] = useState([]);
     // const cards = [

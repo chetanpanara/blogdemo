@@ -1,123 +1,125 @@
 "use client";
-
 import axios from "axios";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Loader } from "lucide-react";
+import Image from "next/image";
 
-export default function blogsForm() {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    image: null,
-  });
-
+export default function BlogsPage() {
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const router = useRouter();
+  const [cards, setCard] = useState([]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const data = new FormData();
-    data.append("title", formData.title);
-    data.append("description", formData.description);
-    if (formData.image) {
-      data.append("image", formData.image);
-    }
-
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.post("/api/admin/blogs", data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (response.data.message) {
-        setMessage("blogs added successfully!");
-        router.push("/admin/blogs");
-        setFormData({ title: "", description: "", image: null });
+      const res = await axios.get("/api/admin/blogs");
+      if (res.data.success) {
+        setCard(res.data.data);
       } else {
-        setMessage("Failed to add blogs. Please try again.");
+        throw new Error(res.data.message || "Failed to fetch blogs");
       }
-    } catch (error) {
-      console.error("Error adding blogs:", error);
-      setMessage("An error occurred while adding the blogs.");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error(err);
     }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handelDelete = async (id) => {
+    await axios.delete(`/api/admin/blogs/${id}`);
+    fetchData();
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-6 text-blue-600">Add New blogs</h2>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Title
-          </label>
-          <input
-            type="text"
-            name="title"
-            placeholder="Enter blogs title"
-            className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
-            required
-          />
+    <>
+      <div className="overflow-x-auto">
+        <div className="mb-10">
+          <h2 className="text-xl font-semibold mb-2 text-blue-600">
+            Manage Blogs
+          </h2>
+          <p>
+            Add, update, or remove blogs to keep your offerings up-to-date and
+            organized.
+          </p>
         </div>
 
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Description
-          </label>
-          <textarea
-            name="description"
-            rows="4"
-            placeholder="Enter blogs description"
-            className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            required
-          ></textarea>
+        <div className="mb-6">
+          <Link
+            href={"/admin/blogs/addblogs"}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Add New Blogs
+          </Link>
         </div>
 
-        {/* Image URL */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Image URL
-          </label>
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onChange={(e) =>
-              setFormData({ ...formData, image: e.target.files[0] })
-            }
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
-          disabled={loading}
-        >
-          {loading ? "Submitting..." : "Submit"}
-        </button>
-      </form>
-
-      {message && (
-        <p className="mt-4 text-sm text-center text-green-600">{message}</p>
-      )}
-    </div>
+        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+          <thead className="bg-blue-50 text-blue-600">
+            <tr>
+              <th className="text-left px-6 py-3 text-sm font-semibold">
+                Title
+              </th>
+              <th className="text-left px-6 py-3 text-sm font-semibold">
+                Description
+              </th>
+              <th className="text-left px-6 py-3 text-sm font-semibold">
+                Image
+              </th>
+              <th className="text-left px-6 py-3 text-sm font-semibold">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="4">
+                  <div className="flex justify-center items-center py-10">
+                    <Loader className="h-8 w-8 text-blue-500 animate-spin" />
+                    <span className="ml-2 text-blue-600 text-sm font-medium">
+                      Loading blogs...
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              <>
+                {cards.map((item, index) => (
+                  <tr key={index} className="border-t hover:bg-gray-50">
+                    <td className="px-6 py-4">{item.title}</td>
+                    <td className="px-6 py-4">{item.description}</td>
+                    <td className="px-6 py-4">
+                      <Image
+                        src={`/uploads/${item.image}`}
+                        alt={item.title}
+                        width={64}
+                        height={64}
+                        className="object-cover rounded"
+                      />
+                    </td>
+                    <td className="px-6 py-4 flex items-center">
+                      <Link
+                        href={`/admin/blogs/addblogs/${item._id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handelDelete(item._id)}
+                        className="text-red-600 hover:underline ml-4"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

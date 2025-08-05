@@ -3,7 +3,7 @@ import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function blogsForm() {
+export default function BlogsForm() {
 
   const {id} = useParams();
   const router = useRouter();
