@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Loader } from "lucide-react";
 import Image from "next/image";
 
-export default function BlogsPage() {
+export default function AddBlogsPage() {
   const [loading, setLoading] = useState(false);
   const [cards, setCard] = useState([]);
 
